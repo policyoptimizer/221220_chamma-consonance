@@ -1,0 +1,8 @@
+/team1/*
+  Access-Control-Allow-Origin: *
+
+/team2/*
+  Access-Control-Allow-Origin: *
+
+/team3/*
+  Access-Control-Allow-Origin: *
