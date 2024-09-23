@@ -1,5 +1,6 @@
 let recognizer = null;
 let isListening = false;
+let chart = null;
 
 // 모델 로드 함수
 async function loadModel(team) {
@@ -32,11 +33,44 @@ async function loadModel(team) {
         console.log(`${team} 모델 로드 완료`);
         document.getElementById('start-btn').disabled = false;
         document.getElementById('label').innerText = `${team} 모델 로드 완료. 음성 인식을 시작하세요.`;
-        document.getElementById('probabilities').innerHTML = ''; // 확률 초기화
+
+        // 기존 차트가 있으면 제거
+        if (chart) {
+            chart.destroy();
+            chart = null;
+        }
+
+        // 차트 초기화
+        const ctx = document.getElementById('probabilityChart').getContext('2d');
+        chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: recognizer.wordLabels(),
+                datasets: [{
+                    label: '확률 (%)',
+                    data: Array(recognizer.wordLabels().length).fill(0),
+                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100
+                    }
+                }
+            }
+        });
+
     } catch (error) {
         console.error('모델 로드 실패:', error);
         document.getElementById('label').innerText = `모델 로드 실패: ${error.message}`;
-        document.getElementById('probabilities').innerHTML = ''; // 확률 초기화
+        if (chart) {
+            chart.destroy();
+            chart = null;
+        }
     }
 }
 
@@ -58,15 +92,10 @@ function startListening() {
 
         document.getElementById('label').innerText = `예측: ${predictedLabel}`;
 
-        // 클래스별 확률 표시
-        let probabilitiesHTML = '<h3>클래스별 확률:</h3><ul>';
-        scores.forEach((score, index) => {
-            const label = labels[index];
-            const percentage = (score * 100).toFixed(2);
-            probabilitiesHTML += `<li>${label}: ${percentage}%</li>`;
-        });
-        probabilitiesHTML += '</ul>';
-        document.getElementById('probabilities').innerHTML = probabilitiesHTML;
+        // 클래스별 확률 업데이트 (퍼센트 단위)
+        const percentages = scores.map(score => (score * 100).toFixed(2));
+        chart.data.datasets[0].data = percentages;
+        chart.update();
     }, {
         includeSpectrogram: true,
         probabilityThreshold: 0.75
