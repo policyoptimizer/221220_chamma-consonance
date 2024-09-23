@@ -7,10 +7,12 @@
     <!-- TensorFlow.js 및 Speech Commands 라이브러리 로드 -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/speech-commands"></script>
+    <!-- Chart.js 라이브러리 로드 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="container">
-        <h1>실로폰 소리 분류기</h1>
+        <h1>너와 나의 불협화음, 머신러닝으로 새롭게</h1>
         <div class="button-group">
             <button onclick="loadModel('team1')">팀 1 모델 로드</button>
             <button onclick="loadModel('team2')">팀 2 모델 로드</button>
@@ -18,7 +20,7 @@
             <button id="start-btn" disabled>음성 인식 시작</button>
         </div>
         <div id="label">대기 중...</div>
-        <div id="probabilities" style="margin-top: 20px;"></div> <!-- 클래스별 확률 표시 영역 -->
+        <canvas id="probabilityChart" width="400" height="200" style="margin-top: 20px;"></canvas> <!-- 그래프 표시 영역 -->
     </div>
     <script src="scripts/main.js"></script>
 </body>
