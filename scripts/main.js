@@ -1,41 +1,44 @@
-let recognizer;
-let currentTeam = null;
+let recognizer = null;
+let isListening = false;
 
 // 모델 로드 함수
 async function loadModel(team) {
-    // 기존에 로드된 모델이 있으면 중지하고 해제
-    if (recognizer) {
-        recognizer.stopListening();
-        recognizer.dispose();
-    }
-
-    currentTeam = team;
-    recognizer = speechCommands.create(
-        'BROWSER_FFT',
-        undefined,
-        `${team}/model.json`,
-        `${team}/metadata.json`
-    );
-
     try {
+        // 기존 recognizer가 있으면 중지
+        if (recognizer) {
+            if (isListening) {
+                recognizer.stopListening();
+                isListening = false;
+            }
+            // speechCommands 라이브러리는 dispose 메서드를 지원하지 않으므로 null로 설정
+            recognizer = null;
+        }
+
+        // 모델 생성 (절대 경로 사용)
+        recognizer = speechCommands.create(
+            'BROWSER_FFT',
+            undefined,
+            `/${team}/model.json`,
+            `/${team}/metadata.json`
+        );
+
+        // 모델 로드
         await recognizer.ensureModelLoaded();
         console.log(`${team} 모델 로드 완료`);
         document.getElementById('start-btn').disabled = false;
         document.getElementById('label').innerText = `${team} 모델 로드 완료. 음성 인식을 시작하세요.`;
     } catch (error) {
-        console.error(`모델 로드 실패: ${error}`);
-        document.getElementById('label').innerText = `모델 로드 실패: ${error}`;
+        console.error('모델 로드 실패:', error);
+        document.getElementById('label').innerText = `모델 로드 실패: ${error.message}`;
     }
 }
 
 // 음성 인식 시작 함수
-async function startListening() {
+function startListening() {
     if (!recognizer) {
         alert('먼저 모델을 로드하세요.');
         return;
     }
-
-    document.getElementById('label').innerText = '음성 인식 중...';
 
     recognizer.listen(result => {
         const scores = result.scores; // 각 클래스의 확률
@@ -51,8 +54,27 @@ async function startListening() {
         includeSpectrogram: true,
         probabilityThreshold: 0.75
     });
+
+    isListening = true;
+    document.getElementById('label').innerText = `음성 인식 중...`;
 }
 
-// 이벤트 리스너 등록
-document.getElementById('start-btn').addEventListener('click', startListening);
+// 음성 인식 중지 함수 (선택 사항)
+function stopListening() {
+    if (recognizer && isListening) {
+        recognizer.stopListening();
+        isListening = false;
+        document.getElementById('label').innerText = `음성 인식 중지됨.`;
+    }
+}
 
+// 이벤트 리스너 설정
+document.getElementById('start-btn').addEventListener('click', () => {
+    if (isListening) {
+        stopListening();
+        document.getElementById('start-btn').innerText = '음성 인식 시작';
+    } else {
+        startListening();
+        document.getElementById('start-btn').innerText = '음성 인식 중지';
+    }
+});
