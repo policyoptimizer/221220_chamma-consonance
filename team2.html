@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>팀2: 정혜안, 임유건의 프로젝트</title>
+    <!-- TensorFlow.js 라이브러리 -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <!-- Teachable Machine 이미지 라이브러리 -->
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        #webcam {
+            border: 2px solid #ddd;
+            border-radius: 4px;
+        }
+        #prediction {
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <h1>팀2: 정혜안, 임유건의 불협화음 분석</h1>
+    <p>팀원: 학생 D, 학생 E</p>
+    
+    <!-- 웹캠 및 예측 결과 -->
+    <video autoplay playsinline muted id="webcam" width="300" height="300"></video>
+    <div id="prediction">예측 결과: 없음</div>
+
+    <!-- 모델 로드 및 예측 스크립트 -->
+    <script>
+        let model, webcam, labelContainer, maxPredictions;
+
+        // 모델 로드 및 웹캠 설정
+        async function init() {
+            const modelURL = "team2/model.json";
+            const metadataURL = "team2/metadata.json";
+
+            // 모델 로드
+            model = await tmImage.load(modelURL, metadataURL);
+            maxPredictions = model.getTotalClasses();
+
+            // 웹캠 설정
+            const flip = true; // 웹캠 반전 여부
+            webcam = new tmImage.Webcam(300, 300, flip);
+            await webcam.setup(); // 웹캠 접근 요청
+            await webcam.play();
+            window.requestAnimationFrame(loop);
+
+            // 웹페이지에 웹캠 추가
+            document.getElementById("webcam").appendChild(webcam.canvas);
+        }
+
+        // 예측 루프
+        async function loop() {
+            webcam.update(); // 웹캠 프레임 업데이트
+            await predict();
+            window.requestAnimationFrame(loop);
+        }
+
+        // 예측 함수
+        async function predict() {
+            const prediction = await model.predict(webcam.canvas);
+            let resultText = "예측 결과: ";
+            prediction.forEach(pred => {
+                resultText += `${pred.className}: ${(pred.probability * 100).toFixed(2)}% `;
+            });
+            document.getElementById("prediction").innerHTML = resultText;
+        }
+
+        // 초기화 함수 호출
+        init();
+    </script>
+    
+    <!-- 동영상 시연 -->
+    <h2>결과물 동영상 시연</h2>
+    <iframe src="https://drive.google.com/file/d/1d7y-YBQLbtlwyWVEMwMllIC2zxi0cPzr/preview" width="640" height="480"></iframe>
+    <iframe src="https://drive.google.com/file/d/0BzGJ7vEKmQJZd0xUUl9MVDhxN1E/preview" width="640" height="480"></iframe>
+    
+    <!-- 설명 -->
+    <h2>프로젝트 설명</h2>
+    <p>우리 팀은 포디프레임 오르골을 사용하여 불협화음을 분석하고, 티처블 머신을 통해 화음을 구분하는 모델을 만들었습니다. 모델을 통해 다양한 화음의 특징을 학습하고, 이를 실제 오르골 연주에 적용해보았습니다.</p>
+</body>
+</html>
