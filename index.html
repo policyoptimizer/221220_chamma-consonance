@@ -3,68 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <title>Chamma Consonance 프로젝트</title>
+    <!-- TensorFlow.js 및 Speech Commands 라이브러리 로드 -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/speech-commands"></script>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
-        #label { font-size: 2em; margin-top: 20px; }
-        button { margin: 5px; padding: 10px 20px; font-size: 1em; }
-    </style>
+    <!-- 외부 스타일 시트 로드 -->
+    <link rel="stylesheet" href="styles/styles.css">
 </head>
 <body>
-    <h1>실로폰 소리 분류기</h1>
-    <button onclick="loadModel('team1')">팀 1 모델 로드</button>
-    <button onclick="loadModel('team2')">팀 2 모델 로드</button>
-    <button onclick="loadModel('team3')">팀 3 모델 로드</button>
-    <button id="start-btn" disabled>음성 인식 시작</button>
-    <div id="label">대기 중...</div>
-
-    <script>
-        let recognizer;
-        let currentTeam = null;
-
-        async function loadModel(team) {
-            if (recognizer) {
-                recognizer.stopListening();
-                recognizer.dispose();
-            }
-
-            currentTeam = team;
-            recognizer = speechCommands.create(
-                'BROWSER_FFT',
-                undefined,
-                `${team}/model.json`,
-                `${team}/metadata.json`
-            );
-
-            await recognizer.ensureModelLoaded();
-            console.log(`${team} 모델 로드 완료`);
-            document.getElementById('start-btn').disabled = false;
-            document.getElementById('label').innerText = `${team} 모델 로드 완료. 음성 인식을 시작하세요.`;
-        }
-
-        async function startListening() {
-            if (!recognizer) {
-                alert('먼저 모델을 로드하세요.');
-                return;
-            }
-
-            recognizer.listen(result => {
-                const scores = result.scores;
-                const labels = recognizer.wordLabels();
-
-                const maxScore = Math.max(...scores);
-                const maxIndex = scores.indexOf(maxScore);
-                const predictedLabel = labels[maxIndex];
-
-                document.getElementById('label').innerText = `예측: ${predictedLabel}`;
-            }, {
-                includeSpectrogram: true,
-                probabilityThreshold: 0.75
-            });
-        }
-
-        document.getElementById('start-btn').addEventListener('click', startListening);
-    </script>
+    <div class="container">
+        <h1>실로폰 소리 분류기</h1>
+        <div class="buttons">
+            <button onclick="loadModel('team1')">팀 1 모델 로드</button>
+            <button onclick="loadModel('team2')">팀 2 모델 로드</button>
+            <button onclick="loadModel('team3')">팀 3 모델 로드</button>
+            <button id="start-btn" disabled>음성 인식 시작</button>
+        </div>
+        <div id="label">대기 중...</div>
+    </div>
+    <!-- 외부 JavaScript 파일 로드 -->
+    <script src="scripts/main.js"></script>
 </body>
 </html>
