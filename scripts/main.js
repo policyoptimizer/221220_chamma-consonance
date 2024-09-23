@@ -14,12 +14,17 @@ async function loadModel(team) {
             recognizer = null;
         }
 
-        // 모델 생성 (절대 경로 사용)
+        // 현재 사이트의 기본 URL을 사용하여 절대 경로 설정
+        const baseURL = window.location.origin;
+        const modelURL = `${baseURL}/${team}/model.json`;
+        const metadataURL = `${baseURL}/${team}/metadata.json`;
+
+        // 모델 생성
         recognizer = speechCommands.create(
             'BROWSER_FFT',
             undefined,
-            `/${team}/model.json`,
-            `/${team}/metadata.json`
+            modelURL,
+            metadataURL
         );
 
         // 모델 로드
