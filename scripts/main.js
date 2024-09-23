@@ -32,9 +32,11 @@ async function loadModel(team) {
         console.log(`${team} 모델 로드 완료`);
         document.getElementById('start-btn').disabled = false;
         document.getElementById('label').innerText = `${team} 모델 로드 완료. 음성 인식을 시작하세요.`;
+        document.getElementById('probabilities').innerHTML = ''; // 확률 초기화
     } catch (error) {
         console.error('모델 로드 실패:', error);
         document.getElementById('label').innerText = `모델 로드 실패: ${error.message}`;
+        document.getElementById('probabilities').innerHTML = ''; // 확률 초기화
     }
 }
 
@@ -55,6 +57,16 @@ function startListening() {
         const predictedLabel = labels[maxIndex];
 
         document.getElementById('label').innerText = `예측: ${predictedLabel}`;
+
+        // 클래스별 확률 표시
+        let probabilitiesHTML = '<h3>클래스별 확률:</h3><ul>';
+        scores.forEach((score, index) => {
+            const label = labels[index];
+            const percentage = (score * 100).toFixed(2);
+            probabilitiesHTML += `<li>${label}: ${percentage}%</li>`;
+        });
+        probabilitiesHTML += '</ul>';
+        document.getElementById('probabilities').innerHTML = probabilitiesHTML;
     }, {
         includeSpectrogram: true,
         probabilityThreshold: 0.75
