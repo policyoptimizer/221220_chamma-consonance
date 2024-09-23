@@ -45,16 +45,8 @@ button:disabled {
     color: #555;
 }
 
-#probabilities {
-    font-size: 1.2em;
-    color: #333;
+#probabilityChart {
+    max-width: 600px;
+    margin: 20px auto;
 }
 
-#probabilities ul {
-    list-style-type: none;
-    padding: 0;
-}
-
-#probabilities li {
-    margin: 5px 0;
-}
