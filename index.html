@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>너와 나의 불협화음, 머신러닝으로 새롭게</title>
     <!-- TensorFlow.js 라이브러리 -->
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-    <!-- Teachable Machine 음성 라이브러리 -->
-    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/audio"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.20.0/dist/tf.min.js"></script>
+    <!-- Teachable Machine 오디오 라이브러리 -->
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/audio@0.8/dist/teachablemachine-audio.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -24,6 +24,7 @@
             padding: 10px 20px;
             font-size: 1em;
             margin-top: 10px;
+            cursor: pointer;
         }
         #prediction {
             margin-top: 10px;
@@ -87,20 +88,29 @@
         async function loadModel(team) {
             const modelURL = models[team].modelURL;
             const metadataURL = models[team].metadataURL;
-            const model = await tmAudio.load(modelURL, metadataURL);
-            loadedModels[team] = model;
+            try {
+                const model = await tmAudio.load(modelURL, metadataURL);
+                loadedModels[team] = model;
+                console.log(`${team} 모델 로드 완료`);
+            } catch (error) {
+                console.error(`${team} 모델 로드 실패:`, error);
+                alert(`${team} 모델을 로드하는 데 실패했습니다. 파일 경로를 확인해주세요.`);
+            }
         }
 
         async function startPrediction(team) {
             if (!loadedModels[team]) {
                 await loadModel(team);
             }
+
             const model = loadedModels[team];
+            if (!model) {
+                alert(`모델 로드에 실패했습니다: ${team}`);
+                return;
+            }
+
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                const audioContext = new AudioContext();
-                const source = audioContext.createMediaStreamSource(stream);
-                const recognizer = model.createRecognizer(audioContext);
+                const recognizer = model.createRecognizer();
 
                 recognizer.listen(result => {
                     let predictionText = "예측 결과: ";
@@ -112,9 +122,11 @@
                     probabilityThreshold: 0.75,
                     overlapFactor: 0.5
                 });
+
+                alert('모델이 준비되었습니다. 실로폰 소리를 입력해주세요.');
             } catch (err) {
                 console.error('마이크 접근 오류:', err);
-                alert('마이크에 접근할 수 없습니다.');
+                alert('마이크에 접근할 수 없습니다. 브라우저 설정을 확인해주세요.');
             }
         }
     </script>
