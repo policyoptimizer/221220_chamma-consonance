@@ -20,21 +20,18 @@
         .model-section h2 {
             margin-bottom: 20px;
         }
-        audio {
-            margin-top: 10px;
-        }
-        .qr-codes img {
-            width: 45%;
-            margin: 2.5%;
-        }
         button {
-            margin-top: 10px;
             padding: 10px 20px;
             font-size: 1em;
+            margin-top: 10px;
         }
         #prediction {
             margin-top: 10px;
             font-size: 1.2em;
+        }
+        .qr-codes img {
+            width: 45%;
+            margin: 2.5%;
         }
     </style>
 </head>
@@ -45,21 +42,18 @@
     <!-- 팀별 모델 섹션 -->
     <div class="model-section">
         <h2>팀1: 서지원</h2>
-        <p>음성 모델을 사용하여 불협화음을 분류합니다.</p>
         <button onclick="startPrediction('team1')">모델 로드 및 예측 시작</button>
         <div id="prediction-team1">예측 결과: 없음</div>
     </div>
 
     <div class="model-section">
         <h2>팀2: 정혜안, 임유건</h2>
-        <p>음성 모델을 사용하여 불협화음을 분류합니다.</p>
         <button onclick="startPrediction('team2')">모델 로드 및 예측 시작</button>
         <div id="prediction-team2">예측 결과: 없음</div>
     </div>
 
     <div class="model-section">
         <h2>팀3: 홍대건</h2>
-        <p>음성 모델을 사용하여 불협화음을 분류합니다.</p>
         <button onclick="startPrediction('team3')">모델 로드 및 예측 시작</button>
         <div id="prediction-team3">예측 결과: 없음</div>
     </div>
@@ -102,35 +96,22 @@
                 await loadModel(team);
             }
             const model = loadedModels[team];
-            // 마이크 권한 요청
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 const audioContext = new AudioContext();
                 const source = audioContext.createMediaStreamSource(stream);
-                const processor = audioContext.createScriptProcessor(2048, 1, 1);
+                const recognizer = model.createRecognizer(audioContext);
 
-                source.connect(processor);
-                processor.connect(audioContext.destination);
-
-                let audioData = [];
-
-                processor.onaudioprocess = async function(e) {
-                    const input = e.inputBuffer.getChannelData(0);
-                    audioData.push(...input);
-                    // 충분한 데이터 수집 후 예측
-                    if (audioData.length > 44100) { // 약 1초 분량 (44,100 샘플 at 44.1kHz)
-                        processor.disconnect();
-                        source.disconnect();
-                        stream.getTracks().forEach(track => track.stop());
-                        const audioBuffer = new Float32Array(audioData);
-                        const prediction = await model.predict(audioBuffer);
-                        let resultText = "예측 결과: ";
-                        prediction.forEach(pred => {
-                            resultText += `${pred.className}: ${(pred.probability * 100).toFixed(2)}% `;
-                        });
-                        document.getElementById(`prediction-${team}`).innerHTML = resultText;
-                    }
-                };
+                recognizer.listen(result => {
+                    let predictionText = "예측 결과: ";
+                    result.scores.forEach(score => {
+                        predictionText += `${score.label}: ${(score.score * 100).toFixed(2)}% `;
+                    });
+                    document.getElementById(`prediction-${team}`).innerHTML = predictionText;
+                }, {
+                    probabilityThreshold: 0.75,
+                    overlapFactor: 0.5
+                });
             } catch (err) {
                 console.error('마이크 접근 오류:', err);
                 alert('마이크에 접근할 수 없습니다.');
