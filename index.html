@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>머신러닝 오디오 모델</title>
+    <!-- TensorFlow.js 라이브러리 -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.20.0/dist/tf.min.js"></script>
+    <!-- Teachable Machine 오디오 라이브러리 -->
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/audio@0.8/dist/teachablemachine-audio.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 1em;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+        #prediction {
+            margin-top: 10px;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <h1>머신러닝 오디오 모델 체험</h1>
+    <button onclick="startPrediction()">모델 로드 및 예측 시작</button>
+    <div id="prediction">예측 결과: 없음</div>
+
+    <script>
+        let model, recognizer;
+
+        async function startPrediction() {
+            // 모델 로드
+            const URL = "./model.json"; // model.json의 상대 경로
+            const METADATA_URL = "./metadata.json"; // metadata.json의 상대 경로
+
+            try {
+                model = await tmAudio.load(URL, METADATA_URL);
+                recognizer = model.createRecognizer();
+
+                // 마이크 접근 요청 및 예측 시작
+                await recognizer.listen(result => {
+                    let predictionText = "예측 결과: ";
+                    result.scores.forEach(score => {
+                        predictionText += `${score.label}: ${(score.score * 100).toFixed(2)}% `;
+                    });
+                    document.getElementById("prediction").innerHTML = predictionText;
+                }, {
+                    probabilityThreshold: 0.75,
+                    overlapFactor: 0.5
+                });
+
+                alert('모델이 준비되었습니다. 실로폰 소리를 입력해주세요.');
+            } catch (error) {
+                console.error('모델 로드 실패:', error);
+                alert('모델을 로드하는 데 실패했습니다.');
+            }
+        }
+    </script>
+</body>
+</html>
